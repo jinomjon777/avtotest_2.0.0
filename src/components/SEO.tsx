@@ -21,7 +21,7 @@ export function SEO({
   noIndex = false,
 }: SEOProps) {
   const fullUrl = `${BASE_URL}${path}`;
-  const fullTitle = path === "/" ? title : `${title} | Avtotestu`;
+  const fullTitle = path === "/" ? title : `${title} | AVTOTEST PREMIUM`;
 
   return (
     <Helmet>
@@ -30,7 +30,7 @@ export function SEO({
       <meta name="title" content={fullTitle} />
       <meta name="description" content={description} />
       {keywords && <meta name="keywords" content={keywords} />}
-      <meta name="author" content="Avtotestu.uz" />
+      <meta name="author" content="AVTOTEST PREMIUM" />
 
       {/* Robots */}
       <meta name="robots" content={noIndex ? "noindex, nofollow" : "index, follow"} />
@@ -45,7 +45,7 @@ export function SEO({
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage} />
       <meta property="og:locale" content="uz_UZ" />
-      <meta property="og:site_name" content="Avtotestu.uz" />
+      <meta property="og:site_name" content="AVTOTEST PREMIUM" />
       
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />

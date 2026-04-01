@@ -90,7 +90,7 @@ export default function Qoshimcha() {
         <div className="max-w-4xl mx-auto px-4">
           <Card className="border-2 border-pro shadow-xl bg-card relative overflow-hidden">
             <span className="absolute top-0 right-0 bg-pro text-pro-foreground text-sm font-bold px-4 py-1 rounded-bl-xl">
-              PRO
+              PREMIUM
             </span>
             <CardContent className="p-6 md:p-8">
               <div className="flex items-center gap-3 mb-4">
@@ -98,28 +98,28 @@ export default function Qoshimcha() {
                   <Crown className="w-6 h-6 text-pro-foreground" />
                 </div>
                 <h2 className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                  PRO Bo'limi Haqida
+                  PREMIUM Bo'limi Haqida
                 </h2>
               </div>
               <p className="text-foreground leading-relaxed text-base">
-                PRO bo'limi oddiy testdan farq qiladi va savollar to'g'riligi to'g'ridan to'g'ri admin tomonidan tekshiriladi. Imtihonda ushbu testlarning tushish ehtimoli yuqori va bu testni ishlash orqali avtomaktabimizda ancha faol natijalarga erishganmiz. PRO funksiyasi yordamida maxsus videodarslarimiz orqali o'z bilimlaringizni yanada oshirib borishingiz mumkin va siz bilan admin tomonidan shug'ullaniladi.
+                PREMIUM bo'limi oddiy testdan farq qiladi va savollar to'g'riligi to'g'ridan to'g'ri admin tomonidan tekshiriladi. Imtihonda ushbu testlarning tushish ehtimoli yuqori va bu testni ishlash orqali avtomaktabimizda ancha faol natijalarga erishganmiz. PREMIUM funksiyasi yordamida maxsus videodarslarimiz orqali o'z bilimlaringizni yanada oshirib borishingiz mumkin va siz bilan admin tomonidan shug'ullaniladi.
               </p>
               <div className="mt-6">
                 {user && profile?.is_pro ? (
                   <div className="flex items-center gap-3 bg-pro/10 border border-pro rounded-full px-6 py-3 w-fit">
                     <Crown className="w-5 h-5 text-pro" />
                     <span className="font-semibold text-foreground">
-                      {profile.full_name || profile.username || 'PRO Foydalanuvchi'}
+                      {profile.full_name || profile.username || 'PREMIUM Foydalanuvchi'}
                     </span>
                     <span className="text-xs bg-pro text-pro-foreground px-2 py-0.5 rounded-full font-bold">
-                      PRO
+                      PREMIUM
                     </span>
                   </div>
                 ) : (
                   <Link to="/pro">
                     <Button className="bg-pro hover:bg-pro-hover text-pro-foreground gap-2 px-6 py-5 rounded-full font-semibold">
                       <Crown className="w-5 h-5" />
-                      PRO obunaga o'tish
+                      PREMIUM obunaga o'tish
                     </Button>
                   </Link>
                 )}

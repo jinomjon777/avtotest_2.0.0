@@ -39,7 +39,7 @@ export const useProAccess = (redirectPath: string = '/pro', allowTrial: boolean 
 
     if (!allowed) {
       if (state === 'expired_trial' || state === 'expired_pro') {
-        toast.error('Muddati tugagan. PRO obunani yangilang.');
+        toast.error('Muddati tugagan. PREMIUM obunani yangilang.');
       } else {
         toast.error("Bu bo'limga kirish uchun PRO obuna talab qilinadi.");
       }

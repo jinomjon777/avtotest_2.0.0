@@ -548,12 +548,15 @@ export const TestInterfaceBase = ({
     );
   }
 
+  const darkBg = "linear-gradient(135deg, hsl(220,72%,9%) 0%, hsl(225,65%,16%) 60%, hsl(220,60%,12%) 100%)";
+  const isTimeLow = timeRemaining < 60;
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: darkBg }}>
         <div className="text-center">
-          <div className="w-10 h-10 md:w-12 md:h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground text-lg">{testName} {t("test.loading")}</p>
+          <div className="w-12 h-12 border-4 border-blue-400/30 border-t-blue-400 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white/40 text-base">{testName} {t("test.loading")}</p>
         </div>
       </div>
     );
@@ -561,68 +564,102 @@ export const TestInterfaceBase = ({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="p-8 max-w-md text-center">
-          <p className="text-destructive mb-6 text-lg">{error}</p>
-          <Button size="lg" onClick={onExit}>{t("test.goBack")}</Button>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: darkBg }}>
+        <div className="rounded-2xl border p-8 max-w-md text-center" style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}>
+          <p className="text-red-400 mb-6 text-base">{error}</p>
+          <button
+            onClick={onExit}
+            className="h-11 px-6 rounded-xl font-bold text-white"
+            style={{ background: "linear-gradient(135deg, #1d4ed8, #d97706)" }}
+          >
+            {t("test.goBack")}
+          </button>
+        </div>
       </div>
     );
   }
 
   if (!question) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="p-8 max-w-md text-center">
-          <p className="text-muted-foreground mb-6 text-lg">{t("test.noQuestionsFound")}</p>
-          <Button size="lg" onClick={onExit}>{t("test.goBack")}</Button>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: darkBg }}>
+        <div className="rounded-2xl border p-8 max-w-md text-center" style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)" }}>
+          <p className="text-white/40 mb-6 text-base">{t("test.noQuestionsFound")}</p>
+          <button
+            onClick={onExit}
+            className="h-11 px-6 rounded-xl font-bold text-white"
+            style={{ background: "linear-gradient(135deg, #1d4ed8, #d97706)" }}
+          >
+            {t("test.goBack")}
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden" style={{ background: darkBg }}>
+      {/* Dots pattern */}
+      <div
+        className="fixed inset-0 pointer-events-none opacity-[0.03]"
+        style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "28px 28px" }}
+      />
+
       {/* Header */}
-      <header className="bg-card border-b border-border px-3 py-2 md:px-4 md:py-2.5 shrink-0">
+      <header
+        className="relative px-3 py-2 md:px-5 md:py-2.5 shrink-0 border-b"
+        style={{ background: "rgba(0,0,0,0.3)", backdropFilter: "blur(16px)", borderColor: "rgba(255,255,255,0.07)" }}
+      >
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3 md:gap-4">
-            <span className="text-xs md:text-sm font-medium text-muted-foreground">{testName}</span>
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Clock className="w-3.5 h-3.5 md:w-4 md:h-4" />
-              <span className="text-sm md:text-base font-medium">{formatTime(timeRemaining)}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-white/40 hidden sm:inline">{testName}</span>
+            {/* Timer */}
+            <div
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg border"
+              style={isTimeLow
+                ? { background: "rgba(239,68,68,0.15)", borderColor: "rgba(239,68,68,0.3)", color: "#f87171" }
+                : { background: "rgba(255,255,255,0.06)", borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.8)" }
+              }
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span className="text-sm font-black tabular-nums">{formatTime(timeRemaining)}</span>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className={`h-7 px-2 md:h-8 md:px-3 text-xs ${autoAdvance ? 'bg-primary/10 text-primary border-primary/30' : 'text-muted-foreground'}`}
+
+          <div className="flex gap-1.5">
+            {/* Auto-advance toggle */}
+            <button
               onClick={() => setAutoAdvance(prev => {
                 const next = !prev;
                 try { localStorage.setItem('autoAdvance', String(next)); } catch {}
                 return next;
               })}
               title={autoAdvance ? "Avto-o'tish yoqilgan" : "Avto-o'tish o'chirilgan"}
+              className="h-8 px-2.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all"
+              style={autoAdvance
+                ? { background: "rgba(59,130,246,0.2)", borderColor: "rgba(59,130,246,0.4)", color: "#93c5fd" }
+                : { background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.3)" }
+              }
             >
-              <SkipForward className="w-4 h-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-7 px-2 md:h-8 md:px-3 text-xs bg-green-500/10 text-green-600 border-green-500/30 hover:bg-green-500/20"
+              <SkipForward className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Finish */}
+            <button
               onClick={handleFinishTest}
+              className="h-8 px-3 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all"
+              style={{ background: "rgba(34,197,94,0.12)", borderColor: "rgba(34,197,94,0.3)", color: "#4ade80" }}
             >
               {t("test.finish")}
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="h-7 px-2 md:h-8 md:px-3 text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+            </button>
+
+            {/* Exit */}
+            <button
               onClick={onExit}
+              className="h-8 px-3 rounded-lg border text-xs font-bold flex items-center gap-1.5 transition-all"
+              style={{ background: "rgba(239,68,68,0.1)", borderColor: "rgba(239,68,68,0.25)", color: "#f87171" }}
             >
               {t("test.exit")}
-            </Button>
+            </button>
           </div>
         </div>
       </header>
@@ -634,99 +671,106 @@ export const TestInterfaceBase = ({
         answeredQuestions={selectedAnswers}
         correctAnswers={correctAnswers}
         onQuestionSelect={(num) => {
-          if (autoAdvanceTimeoutRef.current) {
-            clearTimeout(autoAdvanceTimeoutRef.current);
-          }
+          if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
           setCurrentQuestion(num);
         }}
       />
 
       {/* Main Content */}
-      <main 
-        className="flex-1 px-4 py-4 md:px-8 md:py-5 w-full overflow-y-auto"
+      <main
+        className="relative flex-1 px-4 py-4 md:px-8 md:py-5 w-full overflow-y-auto"
         onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; isSwiping.current = false; }}
         onTouchMove={(e) => { if (Math.abs(e.touches[0].clientX - touchStartX.current) > 30) isSwiping.current = true; }}
         onTouchEnd={(e) => { touchEndX.current = e.changedTouches[0].clientX; if (isSwiping.current) { e.preventDefault(); handleSwipe(); } }}
       >
         <div className="max-w-7xl mx-auto">
-          <div className="text-sm md:text-base text-muted-foreground mb-3 font-medium">
+          {/* Question counter */}
+          <div className="text-xs font-bold text-white/30 uppercase tracking-wider mb-3">
             {t("test.question")} {currentQuestion} / {totalQuestions}
           </div>
 
-          {/* Desktop: 60/40 split layout */}
-          <div className="md:flex md:gap-8 md:items-start">
-            {/* Left Column: Question + Answers (60%) */}
+          {/* Desktop: 60/40 split */}
+          <div className="md:flex md:gap-6 md:items-start">
+            {/* Left: Question + Answers */}
             <div className="md:w-[60%] md:flex-shrink-0">
-              {/* Question Text */}
-              <Card className="p-4 md:p-5 bg-card border-border mb-4">
-                <p className="text-base md:text-lg font-medium text-foreground leading-relaxed">
+              {/* Question card */}
+              <div
+                className="rounded-2xl border p-4 md:p-5 mb-4"
+                style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(12px)", borderColor: "rgba(255,255,255,0.09)" }}
+              >
+                <p className="text-base md:text-lg font-semibold text-white leading-relaxed">
                   {question.text}
                 </p>
-              </Card>
+              </div>
 
-              {/* Mobile Only: Question Image - bosilsa kattalashadi */}
+              {/* Mobile image */}
               {question.image && (
-                <Card className="md:hidden p-3 bg-card border-border mb-4 overflow-hidden">
+                <div
+                  className="md:hidden rounded-2xl border p-3 mb-4 overflow-hidden"
+                  style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.08)" }}
+                >
                   <button type="button" className="block w-full cursor-zoom-in focus:outline-none" onClick={() => setZoomImage(question.image!)}>
-                    <img src={question.image} alt="Question illustration" className="w-full max-w-[300px] h-auto mx-auto object-contain rounded" />
+                    <img src={question.image} alt="Question illustration" className="w-full max-w-[300px] h-auto mx-auto object-contain rounded-xl" />
                   </button>
-                </Card>
+                </div>
               )}
 
-              {/* Answer Options */}
-              <div className="space-y-3">
+              {/* Answers */}
+              <div className="space-y-2.5">
                 {question.answers.map((answer) => {
                   const state = getAnswerState(answer.id);
                   const isSelected = selectedAnswer === answer.id;
-                  
+
+                  let btnStyle: React.CSSProperties;
+                  let circleStyle: React.CSSProperties;
+
+                  if (state === "correct") {
+                    btnStyle = { background: "rgba(34,197,94,0.2)", borderColor: "rgba(34,197,94,0.5)", color: "#4ade80" };
+                    circleStyle = { background: "rgba(34,197,94,0.3)", borderColor: "transparent" };
+                  } else if (state === "incorrect") {
+                    btnStyle = { background: "rgba(239,68,68,0.18)", borderColor: "rgba(239,68,68,0.45)", color: "#f87171" };
+                    circleStyle = { background: "rgba(239,68,68,0.3)", borderColor: "transparent" };
+                  } else if (isSelected) {
+                    btnStyle = { background: "rgba(59,130,246,0.15)", borderColor: "rgba(59,130,246,0.4)", color: "#93c5fd" };
+                    circleStyle = { background: "rgba(59,130,246,0.2)", borderColor: "rgba(59,130,246,0.4)" };
+                  } else {
+                    btnStyle = { background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.75)" };
+                    circleStyle = { background: "transparent", borderColor: "rgba(255,255,255,0.2)" };
+                  }
+
                   return (
                     <button
                       key={answer.id}
                       onClick={() => { if (!isSwiping.current) handleAnswerSelect(answer.id); }}
                       disabled={isRevealed}
-                      className={`
-                        w-full p-4 md:p-4 rounded-lg border text-left transition-all duration-200
-                        flex items-center gap-4
-                        ${state === "correct" 
-                          ? "border-transparent bg-green-500 text-white" 
-                          : state === "incorrect"
-                          ? "border-transparent bg-red-400 text-white"
-                          : isSelected
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border bg-card hover:bg-muted/50 text-foreground"
-                        }
-                      `}
+                      className="w-full rounded-xl border text-left transition-all duration-200 flex items-center gap-3 px-4 py-3.5 hover:brightness-110 disabled:cursor-default"
+                      style={btnStyle}
                     >
-                      <div className={`
-                        w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0
-                        ${state === "correct"
-                          ? "bg-white/20"
-                          : state === "incorrect"
-                          ? "bg-white/20"
-                          : "border-2 border-muted-foreground/50"
-                        }
-                      `}>
-                        {state === "correct" ? (
-                          <Check className="w-4 h-4 md:w-5 md:h-5 text-white" />
-                        ) : state === "incorrect" ? (
-                          <X className="w-4 h-4 md:w-5 md:h-5 text-white" />
-                        ) : null}
+                      <div
+                        className="w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0"
+                        style={circleStyle}
+                      >
+                        {state === "correct" && <Check className="w-4 h-4" style={{ color: "#4ade80" }} />}
+                        {state === "incorrect" && <X className="w-4 h-4" style={{ color: "#f87171" }} />}
                       </div>
-                      <span className="text-base md:text-base font-medium">{answer.text}</span>
+                      <span className="text-sm md:text-base font-medium leading-snug">{answer.text}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Right Column: Image (Desktop only - 40%) - bosilsa kattalashadi */}
+            {/* Right: Desktop image */}
             {question.image && (
               <div className="hidden md:block md:w-[40%] md:flex-shrink-0">
-                <Card className="p-4 bg-card border-border overflow-hidden sticky top-4">
-                  <button type="button" className="block w-full cursor-zoom-in focus:outline-none" onClick={() => setZoomImage(question.image!)}>
-                    <img src={question.image} alt="Question illustration" className="w-full h-auto object-contain rounded max-h-[60vh]" />
+                <div
+                  className="rounded-2xl border overflow-hidden sticky top-4"
+                  style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.08)" }}
+                >
+                  <button type="button" className="block w-full cursor-zoom-in focus:outline-none p-3" onClick={() => setZoomImage(question.image!)}>
+                    <img src={question.image} alt="Question illustration" className="w-full h-auto object-contain rounded-xl max-h-[60vh]" />
                   </button>
-                </Card>
+                </div>
               </div>
             )}
           </div>
@@ -734,59 +778,66 @@ export const TestInterfaceBase = ({
       </main>
 
       {/* Bottom Navigation */}
-      <footer className="bg-card border-t border-border px-3 py-2.5 md:px-4 md:py-3 shrink-0">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2">
-          <Button
-            variant="outline"
-            size="default"
-            className="h-9 px-3 md:h-10 md:px-4 text-sm"
+      <footer
+        className="relative px-3 py-2.5 md:px-5 md:py-3 shrink-0 border-t"
+        style={{ background: "rgba(0,0,0,0.3)", backdropFilter: "blur(16px)", borderColor: "rgba(255,255,255,0.07)" }}
+      >
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
+          <button
             disabled={currentQuestion === 1}
             onClick={() => {
-              if (autoAdvanceTimeoutRef.current) {
-                clearTimeout(autoAdvanceTimeoutRef.current);
-              }
+              if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
               setCurrentQuestion(prev => Math.max(1, prev - 1));
             }}
+            className="h-10 px-4 rounded-xl border font-semibold text-sm flex items-center gap-1.5 transition-all disabled:opacity-30"
+            style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}
           >
-            <ChevronLeft className="w-4 h-4 mr-1" />
+            <ChevronLeft className="w-4 h-4" />
             {t("test.previous")}
-          </Button>
-          
-          <div className="text-xs md:text-sm text-muted-foreground text-center">
-            <span className="font-medium text-primary">{Object.keys(selectedAnswers).length}</span>
+          </button>
+
+          <div className="text-sm text-white/30 font-medium text-center">
+            <span className="font-black text-white/70">{Object.keys(selectedAnswers).length}</span>
             <span> / {totalQuestions}</span>
           </div>
 
-          <Button
-            size="default"
-            className="h-9 px-3 md:h-10 md:px-4 text-sm"
+          <button
             disabled={currentQuestion === totalQuestions}
             onClick={() => {
-              if (autoAdvanceTimeoutRef.current) {
-                clearTimeout(autoAdvanceTimeoutRef.current);
-              }
+              if (autoAdvanceTimeoutRef.current) clearTimeout(autoAdvanceTimeoutRef.current);
               setCurrentQuestion(prev => Math.min(totalQuestions, prev + 1));
             }}
+            className="h-10 px-4 rounded-xl font-bold text-sm flex items-center gap-1.5 transition-all disabled:opacity-30 text-white"
+            style={{ background: "linear-gradient(135deg, #1d4ed8, #1e3a8a)" }}
           >
             {t("test.next")}
-            <ChevronRight className="w-4 h-4 ml-1" />
-          </Button>
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
       </footer>
 
-      {/* Finish Confirmation Dialog */}
+      {/* Finish Dialog */}
       <AlertDialog open={showFinishDialog} onOpenChange={setShowFinishDialog}>
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent
+          className="max-w-md border"
+          style={{ background: "hsl(225,65%,14%)", borderColor: "rgba(255,255,255,0.1)" }}
+        >
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl">{t("test.finishConfirmTitle")}</AlertDialogTitle>
-            <AlertDialogDescription className="text-base">
+            <AlertDialogTitle className="text-xl text-white">{t("test.finishConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/50">
               {t("test.finishConfirmDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="h-11">{t("test.cancel")}</AlertDialogCancel>
-            <AlertDialogAction 
-              className="h-11 bg-green-500 hover:bg-green-600"
+            <AlertDialogCancel
+              className="border text-white/70 hover:text-white"
+              style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.12)" }}
+            >
+              {t("test.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="font-bold text-white border-0"
+              style={{ background: "linear-gradient(135deg, #22c55e, #16a34a)" }}
               onClick={confirmFinishTest}
             >
               {t("test.confirm")}
@@ -794,6 +845,7 @@ export const TestInterfaceBase = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       <ImageLightbox imageUrl={zoomImage} onClose={() => setZoomImage(null)} />
     </div>
   );

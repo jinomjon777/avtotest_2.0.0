@@ -3,17 +3,15 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProAccess } from "@/hooks/useProAccess";
 import { useTestSession } from "@/hooks/useTestSession";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { SEO } from "@/components/SEO";
 import { MavzuliTestInterface } from "@/components/MavzuliTestInterface";
-import { Button } from "@/components/ui/button";
-import { User, LogIn, Home, Play, AlertTriangle } from "lucide-react";
+import { User, LogIn, Home, Play, AlertTriangle, Loader2 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const topics = [
   { id: '31', name: { uz_lat: 'Barcha savollar', uz_cyr: 'Барча саволлар', ru: 'Все вопросы' } },
-   { id: '35a', name: { uz_lat: "Yangi savollar1", uz_cyr: "Янги саволлар1", ru: "Новые вопросы1" } },
-    { id: '35b', name: { uz_lat: "Yangi savollar2", uz_cyr: "Янги саволлар2", ru: "Новые вопросы2" } },
+  { id: '35a', name: { uz_lat: "Yangi savollar1", uz_cyr: "Янги саволлар1", ru: "Новые вопросы1" } },
+  { id: '35b', name: { uz_lat: "Yangi savollar2", uz_cyr: "Янги саволлар2", ru: "Новые вопросы2" } },
   { id: '1', name: { uz_lat: "Umumiy qoidalar", uz_cyr: "Умумий қоидалар", ru: "Общие правила" } },
   { id: '3', name: { uz_lat: "Ogohlantiruvchi belgilar", uz_cyr: "Огоҳлантирувчи белгилар", ru: "Предупреждающие знаки" } },
   { id: '4', name: { uz_lat: "Imtiyoz belgilar", uz_cyr: "Имтиёз белгилар", ru: "Знаки приоритета" } },
@@ -46,14 +44,15 @@ const topics = [
   { id: '28', name: { uz_lat: "Harakat xavfsizligini ta'minlash 1", uz_cyr: "Ҳаракат хавфсизлигини таъминлаш 1", ru: "Обеспечение безопасности движения 1" } },
   { id: '29', name: { uz_lat: "Harakat xavfsizligini ta'minlash 2", uz_cyr: "Ҳаракат хавфсизлигини таъминлаш 2", ru: "Обеспечение безопасности движения 2" } },
   { id: '30', name: { uz_lat: "Birinchi tibbiy yordam", uz_cyr: "Биринчи тиббий ёрдам", ru: "Первая медицинская помощь" } },
- 
 ];
 
 const languages = [
-  { id: "uz-lat" as const, label: "O'zbekcha", flag: "🇺🇿" },
-  { id: "uz" as const, label: "Ўзбекча", flag: "🇺🇿" },
-  { id: "ru" as const, label: "Русский", flag: "🇷🇺" },
+  { id: "uz-lat" as const, label: "Lotin" },
+  { id: "uz" as const, label: "Кирилл" },
+  { id: "ru" as const, label: "Русский" },
 ];
+
+const darkBg = "linear-gradient(135deg, hsl(220,72%,9%) 0%, hsl(225,65%,16%) 60%, hsl(220,60%,12%) 100%)";
 
 export default function MavzuliTestlar() {
   const mavzuliStorageKey = 'mavzuli_activeTest';
@@ -64,17 +63,12 @@ export default function MavzuliTestlar() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed.testStarted && parsed.selectedTopic) {
-          // Only restore if the in-progress test state still exists
           const testKey = `testState_mavzuli_${parsed.selectedTopic}`;
           if (!localStorage.getItem(testKey)) {
             localStorage.removeItem(mavzuliStorageKey);
             return { selectedTopic: null as string | null, testStarted: false, sessionId: null as string | null };
           }
-          return {
-            selectedTopic: parsed.selectedTopic as string,
-            testStarted: true,
-            sessionId: (parsed.sessionId ?? null) as string | null,
-          };
+          return { selectedTopic: parsed.selectedTopic as string, testStarted: true, sessionId: (parsed.sessionId ?? null) as string | null };
         }
       }
     } catch (e) { /* ignore */ }
@@ -90,11 +84,9 @@ export default function MavzuliTestlar() {
   const { language, setLanguage } = useLanguage();
   const navigate = useNavigate();
 
-  // PRO and active trial users can enter mavzuli; expired trial is blocked via redirect
-  const { hasAccess, loading: accessLoading } = useProAccess('/pro', true);
+  const { loading: accessLoading } = useProAccess('/pro', true);
   const { starting, startSession } = useTestSession();
 
-  // Persist active test state
   useEffect(() => {
     try {
       if (testStarted && selectedTopic) {
@@ -104,11 +96,6 @@ export default function MavzuliTestlar() {
       }
     } catch (e) { /* ignore */ }
   }, [testStarted, selectedTopic, sessionId]);
-
-  useEffect(() => {
-    if (accessLoading) return;
-    if (!hasAccess) return;
-  }, [accessLoading, hasAccess]);
 
   const getTopicName = (topic: typeof topics[0]) => {
     const langKey = language === 'uz-lat' ? 'uz_lat' : language === 'uz' ? 'uz_cyr' : 'ru';
@@ -124,39 +111,24 @@ export default function MavzuliTestlar() {
       isPremium: true,
     });
     if (!result.ok) {
-      setStartError(
-        result.error === 'no_premium_access'
-          ? 'Bu mavzuni boshlash uchun PRO obuna kerak.'
-          : 'Serverga ulanishda xatolik. Qayta urinib ko\'ring.'
-      );
+      setStartError(result.error === 'no_premium_access' ? 'Bu mavzuni boshlash uchun PREMIUM obuna kerak.' : 'Serverga ulanishda xatolik. Qayta urinib ko\'ring.');
       return;
     }
     setSessionId(result.session?.sessionId ?? null);
     setTestStarted(true);
   };
 
-  // Double-tap to start on mobile: first tap selects topic, second tap starts test
   const handleMobileTopicTap = async (topicId: string) => {
-    if (selectedTopic === topicId) {
-      await handleStartTest();
-    } else {
-      setSelectedTopic(topicId);
-    }
-  };
-
-  const getTopicButtonClass = (topicId: string) => {
-    const isSelected = selectedTopic === topicId;
-    return isSelected
-      ? 'bg-primary/10 text-primary border-primary'
-      : 'bg-background text-foreground border-border hover:border-primary/50';
+    if (selectedTopic === topicId) await handleStartTest();
+    else setSelectedTopic(topicId);
   };
 
   if (isLoading || accessLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: darkBg }}>
         <div className="text-center">
-          <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground font-medium">Yuklanmoqda...</p>
+          <Loader2 className="w-10 h-10 animate-spin text-blue-400 mx-auto mb-3" />
+          <p className="text-sm text-white/40 font-medium">Yuklanmoqda...</p>
         </div>
       </div>
     );
@@ -168,12 +140,7 @@ export default function MavzuliTestlar() {
     const topic = topics.find(t => t.id === selectedTopic)!;
     return (
       <MavzuliTestInterface
-        onExit={() => {
-          setTestStarted(false);
-          setSelectedTopic(null);
-          setSessionId(null);
-          setStartError(null);
-        }}
+        onExit={() => { setTestStarted(false); setSelectedTopic(null); setSessionId(null); setStartError(null); }}
         topicId={selectedTopic}
         topicName={getTopicName(topic)}
         sessionId={sessionId}
@@ -182,227 +149,263 @@ export default function MavzuliTestlar() {
     );
   }
 
+  const SidePanel = () => (
+    <div className="flex flex-col h-full gap-4 p-6">
+      {/* Nav */}
+      <div className="flex items-center justify-between">
+        <Link to="/">
+          <button className="flex items-center gap-2 text-white/50 hover:text-white/80 text-sm font-medium transition-colors">
+            <Home className="w-4 h-4" /> Bosh sahifa
+          </button>
+        </Link>
+        {user ? (
+          <button onClick={() => navigate('/profile')} className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors">
+            <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center">
+              <User className="w-3.5 h-3.5 text-blue-400" />
+            </div>
+            <span className="text-xs font-medium text-white/70 max-w-[80px] truncate">{profile?.full_name || profile?.username || 'Profil'}</span>
+          </button>
+        ) : (
+          <button onClick={() => navigate('/auth')} className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-white/60 text-xs border border-white/10 bg-white/5 hover:bg-white/10">
+            <LogIn className="w-3.5 h-3.5" /> Kirish
+          </button>
+        )}
+      </div>
+
+      {/* Language */}
+      <div className="flex gap-1.5 p-1 rounded-xl" style={{ background: "rgba(255,255,255,0.06)" }}>
+        {languages.map((lang) => (
+          <button
+            key={lang.id}
+            onClick={() => setLanguage(lang.id)}
+            className="flex-1 py-1.5 rounded-lg text-xs font-bold transition-all"
+            style={language === lang.id ? { background: "rgba(255,255,255,0.12)", color: "white" } : { color: "rgba(255,255,255,0.35)" }}
+          >
+            {lang.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Selected topic */}
+      <div
+        className="rounded-2xl border p-4 min-h-[72px] flex items-center justify-center text-center"
+        style={selectedTopic
+          ? { background: "rgba(59,130,246,0.1)", borderColor: "rgba(59,130,246,0.3)" }
+          : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", borderStyle: "dashed" }
+        }
+      >
+        {selectedTopic ? (
+          <div className="text-sm font-bold text-blue-300 leading-snug">
+            {getTopicName(topics.find(t => t.id === selectedTopic)!)}
+          </div>
+        ) : (
+          <div className="text-xs text-white/25">
+            {language === 'ru' ? 'Выберите тему справа' : language === 'uz' ? 'Ўнг томондан мавзу танланг' : 'O\'ng tomondan mavzu tanlang'}
+          </div>
+        )}
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { value: "∞", label: "Savollar", color: "#60a5fa" },
+          { value: "60", label: "daqiqa", color: "#a78bfa" },
+          { value: "80%", label: "O'tish balli", color: "#4ade80" },
+        ].map(({ value, label, color }) => (
+          <div key={label} className="rounded-xl p-2.5 text-center border" style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.07)" }}>
+            <div className="text-lg font-black" style={{ color }}>{value}</div>
+            <div className="text-[9px] text-white/30 mt-0.5">{label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Error */}
+      {startError && (
+        <div className="flex items-center gap-2 rounded-xl px-3 py-2.5 border" style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.2)" }}>
+          <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
+          <p className="text-xs text-red-300">{startError}</p>
+        </div>
+      )}
+
+      {/* Start button */}
+      <button
+        onClick={handleStartTest}
+        disabled={selectedTopic === null || starting}
+        className="w-full h-12 rounded-xl font-bold text-white flex items-center justify-center gap-2 transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-35 shadow-lg"
+        style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #d97706 100%)" }}
+      >
+        {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
+        {selectedTopic ? "Testni boshlash" : "Mavzuni tanlang"}
+      </button>
+
+      {/* Instructions */}
+      <div className="rounded-xl p-3.5 border" style={{ background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)" }}>
+        <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider mb-2">Ko'rsatmalar</p>
+        <ul className="space-y-1.5">
+          {["Mavzu bo'yicha barcha savollar beriladi", "Har bir savol uchun javob tanlang", "Test tugagach natijani ko'ring"].map((instr, i) => (
+            <li key={i} className="flex items-start gap-2 text-[10px] text-white/30">
+              <span className="text-blue-400/60 mt-0.5">•</span>{instr}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+
   return (
-    <MainLayout>
-      <SEO 
+    <>
+      <SEO
         title="Mavzuli testlar - YHQ bo'yicha mavzular"
-        description="Yo'l harakati qoidalari bo'yicha mavzuli testlar. Belgilar, chorrahalar, tezlik va boshqa mavzular bo'yicha bilimlaringizni sinang."
+        description="Yo'l harakati qoidalari bo'yicha mavzuli testlar."
         path="/mavzuli"
-        keywords="mavzuli test, YHQ mavzulari, yo'l qoidalari, chorrahalar, tezlik qoidalari"
+        keywords="mavzuli test, YHQ mavzulari, yo'l qoidalari"
       />
-      <div className="min-h-screen bg-background">
-        {/* Mobile Layout */}
-        <div className="lg:hidden flex flex-col min-h-screen">
-          <div className="bg-card border-b border-border p-4 sticky top-0 z-10">
+
+      <div className="min-h-screen" style={{ background: darkBg }}>
+        {/* Dots pattern */}
+        <div
+          className="fixed inset-0 pointer-events-none opacity-[0.04]"
+          style={{ backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)", backgroundSize: "32px 32px" }}
+        />
+
+        {/* ── Mobile Layout ── */}
+        <div className="lg:hidden flex flex-col min-h-screen relative">
+          {/* Header */}
+          <div className="sticky top-0 z-10 border-b px-4 py-3 backdrop-blur-md" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.35)" }}>
             <div className="flex items-center justify-between mb-3">
               <Link to="/">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Home className="w-4 h-4" />
-                  Bosh sahifa
-                </Button>
+                <button className="flex items-center gap-1.5 text-white/50 hover:text-white/80 text-sm font-medium transition-colors">
+                  <Home className="w-4 h-4" /> Bosh sahifa
+                </button>
               </Link>
               {user ? (
-                <Button variant="outline" size="sm" onClick={() => navigate('/profile')} className="gap-2">
-                  <User className="w-4 h-4" />
-                  <span className="text-xs">{profile?.full_name || profile?.username || 'Profil'}</span>
-                </Button>
+                <button onClick={() => navigate('/profile')} className="flex items-center gap-1.5 text-white/60 text-xs border border-white/10 px-2.5 py-1.5 rounded-lg bg-white/5">
+                  <User className="w-3.5 h-3.5" />
+                  <span className="max-w-[70px] truncate">{profile?.full_name || profile?.username || 'Profil'}</span>
+                </button>
               ) : (
-                <Button size="sm" onClick={() => navigate('/auth')} className="gap-2">
-                  <LogIn className="w-4 h-4" />
-                  <span className="text-xs">Kirish</span>
-                </Button>
+                <button onClick={() => navigate('/auth')} className="flex items-center gap-1.5 text-white/60 text-xs border border-white/10 px-2.5 py-1.5 rounded-lg bg-white/5">
+                  <LogIn className="w-3.5 h-3.5" /> Kirish
+                </button>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               {languages.map((lang) => (
-                <Button
+                <button
                   key={lang.id}
-                  variant="outline"
-                  size="sm"
-                  className={`flex-1 text-xs ${language === lang.id ? "bg-primary text-primary-foreground border-primary" : ""}`}
                   onClick={() => setLanguage(lang.id)}
+                  className="flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all"
+                  style={language === lang.id
+                    ? { background: "rgba(59,130,246,0.2)", borderColor: "rgba(59,130,246,0.4)", color: "#93c5fd" }
+                    : { background: "transparent", borderColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.35)" }
+                  }
                 >
-                  {lang.flag} {lang.label}
-                </Button>
+                  {lang.label}
+                </button>
               ))}
             </div>
           </div>
-          <div className="bg-card border-b border-border p-4">
-            {selectedTopic ? (
-              <div className="mb-3 p-4 bg-primary/5 rounded-lg border border-primary/20 text-center">
-                <div className="text-sm font-semibold text-primary">
-                  {getTopicName(topics.find(t => t.id === selectedTopic)!)}
-                </div>
-              </div>
-            ) : (
-              <div className="mb-3 p-4 bg-muted/30 rounded-lg border border-border text-center">
-                <div className="text-sm text-muted-foreground">
-                  {language === 'ru' ? 'Выберите тему ниже' : language === 'uz' ? 'Қуйидан мавзу танланг' : 'Quyidan mavzu tanlang'}
-                </div>
-              </div>
-            )}
+
+          {/* Mobile selected + start */}
+          <div className="p-4 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+            <div
+              className="mb-3 rounded-2xl p-4 border text-center min-h-[60px] flex items-center justify-center"
+              style={selectedTopic
+                ? { background: "rgba(59,130,246,0.12)", borderColor: "rgba(59,130,246,0.3)" }
+                : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", borderStyle: "dashed" }
+              }
+            >
+              {selectedTopic ? (
+                <div className="text-sm font-bold text-blue-300">{getTopicName(topics.find(t => t.id === selectedTopic)!)}</div>
+              ) : (
+                <div className="text-xs text-white/25">{language === 'ru' ? 'Выберите тему ниже' : language === 'uz' ? 'Қуйидан мавзу танланг' : 'Quyidan mavzu tanlang'}</div>
+              )}
+            </div>
             {startError && (
-              <div className="mb-2 flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                <p className="text-xs text-red-700">{startError}</p>
+              <div className="mb-2 flex items-center gap-2 rounded-xl px-3 py-2 border" style={{ background: "rgba(239,68,68,0.08)", borderColor: "rgba(239,68,68,0.2)" }}>
+                <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
+                <p className="text-xs text-red-300">{startError}</p>
               </div>
             )}
-            <Button size="lg" className="w-full gap-2" onClick={handleStartTest} disabled={selectedTopic === null || starting}>
-              {starting ? <div className="w-5 h-5 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Play className="w-5 h-5" />}
+            <button
+              onClick={handleStartTest}
+              disabled={selectedTopic === null || starting}
+              className="w-full h-12 rounded-xl font-bold text-white flex items-center justify-center gap-2 disabled:opacity-35"
+              style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #d97706 100%)" }}
+            >
+              {starting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-current" />}
               {selectedTopic ? "Testni boshlash" : "Mavzuni tanlang"}
-            </Button>
+            </button>
           </div>
-          <div className="flex-1 p-4 overflow-y-auto">
-            <h2 className="text-lg font-bold text-foreground mb-3">{language === 'ru' ? 'Темы' : language === 'uz' ? 'Мавзулар' : 'Mavzular'}</h2>
-            <div className="space-y-2">
-              {topics.map((topic) => (
-                <Button
+
+          {/* Topic list mobile */}
+          <div className="flex-1 px-4 py-4 pb-8 space-y-2 relative">
+            <p className="text-xs font-bold text-white/30 uppercase tracking-wider mb-3">
+              {language === 'ru' ? 'Темы' : language === 'uz' ? 'Мавзулар' : 'Mavzular'}
+            </p>
+            {topics.map((topic) => {
+              const isSelected = selectedTopic === topic.id;
+              return (
+                <button
                   key={topic.id}
-                  variant="outline"
-                  className={`w-full justify-start text-left h-auto py-3 px-4 ${getTopicButtonClass(topic.id)}`}
                   onClick={() => handleMobileTopicTap(topic.id)}
+                  className="w-full text-left px-4 py-3 rounded-xl border transition-all text-sm font-medium"
+                  style={isSelected
+                    ? { background: "rgba(59,130,246,0.15)", borderColor: "rgba(59,130,246,0.4)", color: "#93c5fd" }
+                    : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }
+                  }
                 >
-                  <span className="text-sm font-medium">{getTopicName(topic)}</span>
-                </Button>
-              ))}
-            </div>
+                  {getTopicName(topic)}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Desktop Layout */}
-        <div className="hidden lg:flex h-screen overflow-hidden">
-          <div className="w-[30%] bg-card border-r border-border p-6 flex flex-col">
-            <div className="flex-1 flex flex-col">
-              <div className="mb-4">
-                <Link to="/">
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Home className="w-4 h-4" />
-                    Bosh sahifa
-                  </Button>
-                </Link>
-              </div>
-              <div className="mb-4">
-                {user ? (
-                  <Button variant="outline" onClick={() => navigate('/profile')} className="w-full flex items-center gap-2 h-auto py-2.5 px-3 justify-start">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <User className="w-4 h-4 text-primary" />
-                    </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <div className="font-semibold text-xs truncate">{profile?.full_name || profile?.username || 'Profil'}</div>
-                      {profile?.username && profile?.full_name && (
-                        <div className="text-[10px] text-muted-foreground truncate">@{profile.username}</div>
-                      )}
-                    </div>
-                  </Button>
-                ) : (
-                  <Button onClick={() => navigate('/auth')} className="w-full gap-2" size="sm">
-                    <LogIn className="w-4 h-4" />
-                    Kirish
-                  </Button>
-                )}
-              </div>
-              <div className="mb-4">
-                <h3 className="text-[10px] font-medium text-muted-foreground mb-1.5">Til tanlash</h3>
-                <div className="flex gap-1.5">
-                  {languages.map((lang) => (
-                    <Button
-                      key={lang.id}
-                      variant="outline"
-                      size="sm"
-                      className={`flex-1 text-[11px] h-8 ${language === lang.id ? "bg-primary text-primary-foreground border-primary" : ""}`}
-                      onClick={() => setLanguage(lang.id)}
-                    >
-                      {lang.label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-              {selectedTopic ? (
-                <div className="mb-4 p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-xl border-2 border-primary/20 shadow-sm">
-                  <div className="text-center">
-                    <div className="text-sm font-bold text-primary leading-tight">
-                      {getTopicName(topics.find(t => t.id === selectedTopic)!)}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground mt-1">{language === 'ru' ? 'Выбранная тема' : language === 'uz' ? 'Танланган мавзу' : 'Tanlangan mavzu'}</div>
-                  </div>
-                </div>
-              ) : (
-                <div className="mb-4 p-4 bg-muted/20 rounded-xl border-2 border-dashed border-border">
-                  <div className="text-center text-muted-foreground text-xs">
-                    {language === 'ru' ? 'Выберите тему справа' : language === 'uz' ? 'Ўнг томондан мавзу танланг' : 'O\'ng tomondan mavzu tanlang'}
-                  </div>
-                </div>
-              )}
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div className="text-center p-2.5 bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950 dark:to-blue-900/50 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="text-xl font-bold text-blue-600 dark:text-blue-400">∞</div>
-                  <div className="text-[9px] text-blue-600/70 dark:text-blue-400/70 mt-0.5">Savollar</div>
-                </div>
-                <div className="text-center p-2.5 bg-gradient-to-br from-purple-50 to-purple-100/50 dark:from-purple-950 dark:to-purple-900/50 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <div className="text-xl font-bold text-purple-600 dark:text-purple-400">60</div>
-                  <div className="text-[9px] text-purple-600/70 dark:text-purple-400/70 mt-0.5">daqiqa</div>
-                </div>
-                <div className="text-center p-2.5 bg-gradient-to-br from-green-50 to-green-100/50 dark:from-green-950 dark:to-green-900/50 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="text-xl font-bold text-green-600 dark:text-green-400">80%</div>
-                  <div className="text-[9px] text-green-600/70 dark:text-green-400/70 mt-0.5">O'tish balli</div>
-                </div>
-              </div>
-              {startError && (
-                <div className="mb-2 flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                  <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />
-                  <p className="text-xs text-red-700">{startError}</p>
-                </div>
-              )}
-              <Button size="lg" className="w-full mb-3 gap-2 h-12 text-sm font-semibold shadow-lg hover:shadow-xl transition-all" onClick={handleStartTest} disabled={selectedTopic === null || starting}>
-                {starting ? <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" /> : <Play className="w-4 h-4" />}
-                {selectedTopic ? "Testni boshlash" : "Mavzuni tanlang"}
-              </Button>
-              <div className="p-3 bg-gradient-to-br from-muted/50 to-muted/30 rounded-lg border border-border">
-                <h3 className="text-[10px] font-semibold text-foreground mb-1.5 flex items-center gap-1.5">
-                  <div className="w-1 h-1 rounded-full bg-primary" />
-                  Ko'rsatmalar
-                </h3>
-                <div className="text-[10px] text-muted-foreground space-y-1">
-                  <div className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span>Mavzu bo'yicha barcha savollar beriladi</span>
-                  </div>
-                  <div className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span>Har bir savol uchun javob tanlang</span>
-                  </div>
-                  <div className="flex items-start gap-1.5">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span>Test tugagach natijani ko'ring</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* ── Desktop Layout ── */}
+        <div className="hidden lg:flex h-screen overflow-hidden relative">
+          {/* Left panel */}
+          <div className="w-[28%] border-r flex flex-col overflow-y-auto" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.2)" }}>
+            <SidePanel />
           </div>
-          <div className="w-[70%] bg-background p-8 overflow-y-auto">
-            <div className="max-w-5xl">
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-foreground mb-1">{language === 'ru' ? 'Тематические тесты' : language === 'uz' ? 'Мавзули тестлар' : 'Mavzuli testlar'}</h1>
-                <p className="text-sm text-muted-foreground">
-                  {language === 'ru' ? 'Проверьте свои знания по темам' : language === 'uz' ? 'Мавзу бўйича билимингизни синанг' : 'Mavzu bo\'yicha bilimingizni sinang'}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {topics.map((topic) => (
-                  <Button
+
+          {/* Right panel: topic grid */}
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="mb-6">
+              <h1 className="text-2xl font-black text-white mb-1">
+                {language === 'ru' ? 'Тематические тесты' : language === 'uz' ? 'Мавзули тестлар' : 'Mavzuli testlar'}
+              </h1>
+              <p className="text-sm text-white/30">
+                {language === 'ru' ? 'Проверьте свои знания по темам' : language === 'uz' ? 'Мавзу бўйича билимингизни синанг' : 'Mavzu bo\'yicha bilimingizni sinang'}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {topics.map((topic) => {
+                const isSelected = selectedTopic === topic.id;
+                return (
+                  <button
                     key={topic.id}
-                    variant="outline"
-                    className={`h-auto py-4 px-4 text-left justify-start transition-all ${getTopicButtonClass(topic.id)}`}
                     onClick={() => setSelectedTopic(topic.id)}
+                    className="text-left px-5 py-4 rounded-2xl border transition-all hover:scale-[1.01] active:scale-[0.99]"
+                    style={isSelected
+                      ? { background: "rgba(59,130,246,0.15)", borderColor: "rgba(59,130,246,0.4)", color: "#93c5fd" }
+                      : { background: "rgba(255,255,255,0.03)", borderColor: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }
+                    }
+                    onMouseEnter={(e) => {
+                      if (!isSelected) (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.15)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isSelected) (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.07)";
+                    }}
                   >
-                    <span className="text-sm font-medium leading-snug">{getTopicName(topic)}</span>
-                  </Button>
-                ))}
-              </div>
+                    <span className="text-sm font-semibold leading-snug">{getTopicName(topic)}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 }

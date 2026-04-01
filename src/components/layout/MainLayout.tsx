@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Menu, X, User, LogIn, Crown, Globe, ChevronDown, Home, Phone, BookOpen, Info, Car } from "lucide-react";
+import { Menu, X, User, LogIn, Crown, Globe, ChevronDown, Home, Phone, BookOpen, Info, Car, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ interface MainLayoutProps {
 export function MainLayout({ children }: MainLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { language, setLanguage, t } = useLanguage();
 
   const location = useLocation();
@@ -23,6 +24,12 @@ export function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
@@ -57,7 +64,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     setLanguage(code);
     setLangMenuOpen(false);
   }, [setLanguage]);
-  
+
   const isMavzuliSection = useMemo(
     () => location.pathname === '/mavzuli' || location.pathname.startsWith('/mavzuli/'),
     [location.pathname]
@@ -74,25 +81,35 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <nav className="sticky top-0 z-50 bg-primary shadow-lg">
-        <div className="w-full px-2 sm:px-4 md:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            
-           <div className="flex items-center gap-4 sm:gap-8 md:gap-12">
-              
+      {/* ─── NAVBAR ─── */}
+      <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-primary/98 shadow-xl shadow-primary/20 backdrop-blur-md"
+          : "bg-primary shadow-lg"
+      }`}>
+        {/* Subtle gold accent line at top */}
+        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-amber-400/70 to-transparent" />
+
+        <div className="w-full px-3 sm:px-5 md:px-7 lg:px-10">
+          <div className="flex justify-between items-center h-[60px]">
+
+            {/* LEFT: Lang + Logo */}
+            <div className="flex items-center gap-3 sm:gap-6">
+
+              {/* Language selector */}
               <div className="relative flex-shrink-0">
                 <button
                   onClick={() => setLangMenuOpen(!langMenuOpen)}
-                  className="flex items-center gap-1 text-primary-foreground/90 hover:text-primary-foreground py-2 text-xs sm:text-sm font-bold transition-colors rounded-md hover:bg-primary-foreground/10 px-1.5 sm:px-2"
+                  className="flex items-center gap-1.5 text-white/85 hover:text-white py-1.5 text-xs font-semibold transition-colors rounded-lg hover:bg-white/10 px-2"
                 >
-                  <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span className="tracking-wide">{currentLangDisplay}</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />
+                  <Globe className="w-3.5 h-3.5" />
+                  <span className="tracking-wider">{currentLangDisplay}</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${langMenuOpen ? "rotate-180" : ""}`} />
                 </button>
-                
+
                 {langMenuOpen && (
-                  <div 
-                    className="absolute top-full left-0 mt-1.5 w-36 bg-card rounded-xl shadow-xl border border-border py-1.5 z-50 overflow-hidden"
+                  <div
+                    className="absolute top-full left-0 mt-2 w-40 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-50 overflow-hidden"
                     onMouseLeave={() => setLangMenuOpen(false)}
                   >
                     {languages.map((l) => (
@@ -100,9 +117,9 @@ export function MainLayout({ children }: MainLayoutProps) {
                         key={l.code}
                         onClick={() => handleLanguageChange(l.code)}
                         className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                          language === l.code 
-                            ? "bg-primary/10 text-primary font-bold" 
-                            : "text-foreground hover:bg-muted font-medium"
+                          language === l.code
+                            ? "bg-primary/8 text-primary font-bold"
+                            : "text-gray-700 hover:bg-gray-50 font-medium"
                         }`}
                       >
                         {l.label}
@@ -112,21 +129,31 @@ export function MainLayout({ children }: MainLayoutProps) {
                 )}
               </div>
 
-              <Link to="/" className="flex items-center gap-2 sm:gap-3 ml-2 sm:ml-4">
-                <img
-                  src="/rasm1.webp"
-                  alt="Avtotestu.uz Logo"
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl shadow-md object-contain"
-                  width="40"
-                  height="40"
-                />
-                <span className="text-primary-foreground font-bold text-lg sm:text-xl hidden md:block tracking-tight font-montserrat">
-                  {t("common.siteName")}
-                </span>
+              {/* Logo */}
+              <Link to="/" className="flex items-center gap-2 group">
+                {/* Logo icon (kichik doira ichida) */}
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-md ring-2 ring-amber-400/40 transition-transform duration-200 group-hover:scale-105 overflow-hidden">
+                  <img
+                    src="/logo-premium.png"
+                    alt="AVTOTEST PREMIUM Logo"
+                    className="w-8 h-8 sm:w-9 sm:h-9 object-contain"
+                    width="36"
+                    height="36"
+                  />
+                </div>
+                {/* Text logo (desktop) */}
+                <div className="hidden md:flex flex-col leading-none">
+                  <div className="flex items-baseline gap-0">
+                    <span className="text-white font-extrabold text-[14px] tracking-tight font-montserrat">AVTO</span>
+                    <span className="text-amber-400 font-extrabold text-[14px] tracking-tight font-montserrat">TEST</span>
+                  </div>
+                  <span className="text-amber-400/90 font-bold text-[9px] tracking-[0.18em] uppercase">— PREMIUM —</span>
+                </div>
               </Link>
             </div>
 
-            <div className="hidden lg:flex items-center gap-1">
+            {/* CENTER + RIGHT: Nav links (desktop) */}
+            <div className="hidden lg:flex items-center gap-0.5">
               <TrialTimer />
               {navLinks.map((item) => {
                 const isActive = location.pathname === item.path;
@@ -134,259 +161,256 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`px-4 py-2 font-medium transition-colors duration-200 ${
+                    className={`px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                       isActive
-                        ? "text-[hsl(var(--cta-green))]"
-                        : "text-primary-foreground/80 hover:text-primary-foreground"
+                        ? "text-amber-400 bg-white/8 font-semibold"
+                        : "text-white/80 hover:text-white hover:bg-white/8"
                     }`}
                   >
                     {item.label}
                   </Link>
                 );
               })}
-              
-              <Link to="/pro">
-                <Button className="ml-2 bg-[hsl(var(--cta-green))] hover:bg-[hsl(var(--cta-green-hover))] text-white font-semibold px-5">
-                  <Crown className="w-4 h-4 mr-1" />
-                  {t("nav.getPro")}
-                </Button>
+
+              {/* PREMIUM button */}
+              <Link to="/pro" className="ml-2">
+                <button className="relative flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-bold text-white overflow-hidden group"
+                  style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #d97706 100%)" }}>
+                  <span className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ background: "linear-gradient(135deg, #1e40af 0%, #b45309 100%)" }} />
+                  <Crown className="w-3.5 h-3.5 relative z-10" />
+                  <span className="relative z-10">{t("nav.getPro")}</span>
+                </button>
               </Link>
 
+              {/* User */}
               {user ? (
                 <Button
                   variant="ghost"
                   onClick={() => navigate('/profile')}
-                  className="ml-2 flex items-center gap-2 text-primary-foreground hover:bg-primary-foreground/10"
+                  className="ml-1.5 flex items-center gap-2 text-white hover:bg-white/10 rounded-xl h-9 px-3"
                 >
-                  <Avatar className="h-8 w-8 bg-[hsl(var(--cta-orange))]">
-                    <AvatarFallback className="bg-[hsl(var(--cta-orange))] text-white text-sm font-semibold">
+                  <Avatar className="h-7 w-7 ring-2 ring-amber-400/60">
+                    <AvatarFallback className="bg-gradient-to-br from-amber-400 to-orange-500 text-white text-xs font-bold">
                       {getInitials(profile?.full_name || profile?.username)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="hidden xl:block font-medium">
+                  <span className="hidden xl:block text-sm font-medium">
                     {profile?.full_name || profile?.username || t("nav.profile")}
                   </span>
                 </Button>
               ) : (
                 <Button
                   onClick={() => navigate('/auth')}
-                  className="ml-2 bg-[hsl(var(--cta-orange))] hover:bg-[hsl(var(--cta-orange-hover))] text-white font-semibold"
+                  className="ml-1.5 bg-white/12 hover:bg-white/20 text-white border border-white/20 font-semibold h-9 px-4 rounded-xl text-sm backdrop-blur-sm"
                 >
-                  <LogIn className="w-4 h-4 mr-1" />
+                  <LogIn className="w-3.5 h-3.5 mr-1.5" />
                   {t("nav.login")}
                 </Button>
               )}
             </div>
 
-            <div className="lg:hidden flex items-center gap-1 sm:gap-2">
+            {/* Mobile right */}
+            <div className="lg:hidden flex items-center gap-1.5">
               <TrialTimer />
+
               <Link to="/pro">
-                <Button 
-                  size="sm"
-                  className="bg-[hsl(var(--cta-green))] hover:bg-[hsl(var(--cta-green-hover))] text-white font-semibold px-3 h-8 sm:h-9 flex items-center gap-1.5"
-                >
-                  <Crown className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm">PRO</span>
-                </Button>
+                <button className="relative flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-white"
+                  style={{ background: "linear-gradient(135deg, #1d4ed8 0%, #d97706 100%)" }}>
+                  <Crown className="w-3.5 h-3.5" />
+                  <span>PREMIUM</span>
+                </button>
               </Link>
-              
+
               {user ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
+                <button
                   onClick={() => navigate('/profile')}
-                  className="text-primary-foreground h-8 w-8 sm:h-9 sm:w-9 ml-1"
+                  className="p-1"
                 >
-                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8 bg-[hsl(var(--cta-orange))]">
-                    <AvatarFallback className="bg-[hsl(var(--cta-orange))] text-white text-xs sm:text-sm font-semibold">
+                  <Avatar className="h-8 w-8 ring-2 ring-amber-400/60">
+                    <AvatarFallback className="bg-gradient-to-br from-amber-400 to-orange-500 text-white text-xs font-bold">
                       {getInitials(profile?.full_name || profile?.username)}
                     </AvatarFallback>
                   </Avatar>
-                </Button>
+                </button>
               ) : (
                 <Button
                   size="sm"
                   onClick={() => navigate('/auth')}
-                  className="bg-[hsl(var(--cta-orange))] hover:bg-[hsl(var(--cta-orange-hover))] text-white font-semibold px-3 h-8 sm:h-9 flex items-center gap-1.5"
+                  className="bg-white/12 hover:bg-white/20 text-white border border-white/20 font-semibold px-3 h-8 text-xs rounded-lg"
                 >
-                  <LogIn className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm">{t("nav.login")}</span>
+                  <LogIn className="w-3.5 h-3.5 mr-1" />
+                  {t("nav.login")}
                 </Button>
               )}
+
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-1.5 sm:p-2 rounded-lg text-primary-foreground hover:bg-primary-foreground/10 transition-colors ml-0.5"
+                className="p-2 rounded-lg text-white hover:bg-white/10 transition-colors"
               >
-                {mobileMenuOpen ? <X className="w-7 h-7 sm:w-9 sm:h-9" /> : <Menu className="w-7 h-7 sm:w-9 sm:h-9" />}
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             </div>
           </div>
         </div>
+      </nav>
 
-        {mobileMenuOpen && (
-          <>
-            <div 
-              className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-40 animate-in fade-in duration-300"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-            
-            <div className="lg:hidden fixed top-0 right-0 bottom-0 w-[280px] bg-card shadow-2xl z-50 animate-in slide-in-from-right duration-300">
-              <div className="flex items-center justify-between p-4 border-b border-border">
-                <h2 className="text-lg font-bold text-foreground">Menu</h2>
-                <button
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+      {/* ─── MOBILE DRAWER ─── */}
+      {mobileMenuOpen && (
+        <>
+          <div
+            className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-in fade-in duration-200"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="lg:hidden fixed top-0 right-0 bottom-0 w-[300px] z-50 animate-in slide-in-from-right duration-300"
+            style={{ background: "linear-gradient(160deg, hsl(220,72%,18%) 0%, hsl(220,65%,12%) 100%)" }}>
+
+            {/* Drawer header */}
+            <div className="flex items-center justify-between p-5 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-md ring-2 ring-amber-400/40 overflow-hidden">
+                  <img src="/logo-premium.png" alt="logo" className="w-8 h-8 object-contain" />
+                </div>
+                <div className="flex flex-col leading-none">
+                  <div className="flex items-baseline gap-0">
+                    <span className="text-white font-extrabold text-sm font-montserrat">AVTO</span>
+                    <span className="text-amber-400 font-extrabold text-sm font-montserrat">TEST</span>
+                  </div>
+                  <span className="text-amber-400/80 text-[9px] font-bold tracking-[0.18em] uppercase">— PREMIUM —</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors text-white/70 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* User info */}
+            {user && profile && (
+              <div className="p-4 border-b border-white/10">
+                <div className="flex items-center gap-3 bg-white/8 rounded-xl p-3">
+                  <Avatar className="h-11 w-11 ring-2 ring-amber-400/50">
+                    <AvatarFallback className="bg-gradient-to-br from-amber-400 to-orange-500 text-white font-bold text-sm">
+                      {getInitials(profile?.full_name || profile?.username)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white text-sm truncate">
+                      {profile?.full_name || profile?.username}
+                    </p>
+                    {profile?.username && profile?.full_name && (
+                      <p className="text-xs text-white/50 truncate">@{profile.username}</p>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  onClick={() => navigate('/profile')}
+                  className="w-full mt-3 bg-white/10 hover:bg-white/15 text-white border border-white/15 text-sm h-9 rounded-xl"
+                  variant="outline"
                 >
-                  <X className="w-5 h-5" />
-                </button>
+                  <User className="w-4 h-4 mr-1.5" />
+                  {t("nav.profile")}
+                </Button>
+              </div>
+            )}
+
+            {/* Nav links */}
+            <div className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-220px)]">
+              {[
+                { path: "/", label: t("nav.home"), icon: Home },
+                { path: "/belgilar", label: t("home.btnBelgilar"), icon: Car },
+                { path: "/contact", label: t("nav.contact"), icon: Phone },
+                { path: "/darslik", label: t("nav.darslik"), icon: BookOpen },
+                { path: "/qoshimcha", label: t("nav.qoshimcha"), icon: Info },
+              ].map(({ path, label, icon: Icon }) => (
+                <Link
+                  key={path}
+                  to={path}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all text-sm ${
+                    location.pathname === path
+                      ? "bg-white/15 text-white border border-white/15"
+                      : "text-white/70 hover:text-white hover:bg-white/8"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                </Link>
+              ))}
+
+              {/* Premium link */}
+              <div className="pt-2 mt-2 border-t border-white/10">
+                <Link
+                  to="/pro"
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all"
+                  style={{ background: "linear-gradient(135deg, rgba(29,78,216,0.4) 0%, rgba(217,119,6,0.3) 100%)", border: "1px solid rgba(217,119,6,0.4)", color: "#fcd34d" }}
+                >
+                  <Crown className="w-4 h-4" />
+                  {t("nav.getPro")}
+                  <Sparkles className="w-3.5 h-3.5 ml-auto opacity-70" />
+                </Link>
               </div>
 
-              {user && profile && (
-                <div className="p-4 border-b border-border bg-muted/30">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-12 w-12 bg-[hsl(var(--cta-orange))]">
-                      <AvatarFallback className="bg-[hsl(var(--cta-orange))] text-white font-semibold">
-                        {getInitials(profile?.full_name || profile?.username)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground truncate">
-                        {profile?.full_name || profile?.username}
-                      </p>
-                      {profile?.username && profile?.full_name && (
-                        <p className="text-xs text-muted-foreground truncate">@{profile.username}</p>
-                      )}
-                    </div>
-                  </div>
+              {!user && (
+                <div className="pt-2">
                   <Button
-                    onClick={() => navigate('/profile')}
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-3 gap-2"
+                    onClick={() => navigate('/auth')}
+                    className="w-full gap-2 bg-white text-primary hover:bg-white/90 font-bold rounded-xl"
                   >
-                    <User className="w-4 h-4" />
-                    {t("nav.profile")}
+                    <LogIn className="w-4 h-4" />
+                    {t("nav.login")}
                   </Button>
                 </div>
               )}
-
-              <div className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-200px)]">
-                <Link
-                  to="/"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    location.pathname === '/' 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <Home className="w-5 h-5" />
-                  {t("nav.home")}
-                </Link>
-                
-                <Link
-                  to="/belgilar"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    location.pathname === '/belgilar'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <Car className="w-5 h-5" />
-                  {t("home.btnBelgilar")}
-                </Link>
-
-                <Link
-                  to="/contact"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    location.pathname === '/contact'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <Phone className="w-5 h-5" />
-                  {t("nav.contact")}
-                </Link>
-                
-                <Link
-                  to="/darslik"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    location.pathname === '/darslik' 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <BookOpen className="w-5 h-5" />
-                  {t("nav.darslik")}
-                </Link>
-                
-                <Link
-                  to="/qoshimcha"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors ${
-                    location.pathname === '/qoshimcha' 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <Info className="w-5 h-5" />
-                  {t("nav.qoshimcha")}
-                </Link>
-
-                <div className="pt-2 mt-2 border-t border-border">
-                  <Link
-                    to="/pro"
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 text-yellow-700 dark:text-yellow-500 hover:from-yellow-500/20 hover:to-amber-500/20 transition-colors"
-                  >
-                    <Crown className="w-5 h-5" />
-                    {t("nav.getPro")}
-                  </Link>
-                </div>
-
-                {!user && (
-                  <div className="pt-2">
-                    <Button
-                      onClick={() => navigate('/auth')}
-                      className="w-full gap-2 bg-[hsl(var(--cta-orange))] hover:bg-[hsl(var(--cta-orange-hover))]"
-                    >
-                      <LogIn className="w-4 h-4" />
-                      {t("nav.login")}
-                    </Button>
-                  </div>
-                )}
-              </div>
             </div>
-          </>
-        )}
-      </nav>
+          </div>
+        </>
+      )}
 
       <main className="flex-1">{children}</main>
 
-      <footer className="bg-primary text-primary-foreground py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      {/* ─── FOOTER ─── */}
+      <footer style={{ background: "linear-gradient(160deg, hsl(220,72%,16%) 0%, hsl(220,72%,12%) 100%)" }}>
+        {/* Gold top line */}
+        <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
+
+        <div className="max-w-7xl mx-auto px-5 pt-12 pb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+
+            {/* Brand */}
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <img
-                  src="/rasm1.webp"
-                  alt="Avtotestu.uz Logo"
-                  className="w-10 h-10 rounded-xl object-contain"
-                  width="40"
-                  height="40"
-                />
-                <span className="font-bold text-xl font-montserrat">{t("common.siteName")}</span>
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center flex-shrink-0 shadow-lg ring-2 ring-amber-400/40 overflow-hidden">
+                  <img
+                    src="/logo-premium.png"
+                    alt="AVTOTEST PREMIUM Logo"
+                    className="w-11 h-11 object-contain"
+                    width="44" height="44"
+                  />
+                </div>
+                <div className="flex flex-col leading-none">
+                  <div className="flex items-baseline gap-0">
+                    <span className="font-extrabold text-white text-base font-montserrat">AVTO</span>
+                    <span className="font-extrabold text-amber-400 text-base font-montserrat">TEST</span>
+                  </div>
+                  <span className="text-amber-400/80 text-[10px] font-bold tracking-[0.16em] uppercase">— PREMIUM —</span>
+                </div>
               </div>
-              <p className="text-primary-foreground/70 text-sm leading-relaxed">
+              <p className="text-white/50 text-sm leading-relaxed max-w-[240px]">
                 {t("footer.aboutText")}
               </p>
             </div>
 
+            {/* Quick links */}
             <div>
-              <h3 className="font-semibold text-lg mb-4">{t("footer.quickLinksTitle")}</h3>
-              <div className="space-y-2">
+              <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">{t("footer.quickLinksTitle")}</h3>
+              <div className="space-y-2.5">
                 {navLinks.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
-                    className="block text-primary-foreground/70 hover:text-primary-foreground transition-colors text-sm"
+                    className="block text-white/50 hover:text-white transition-colors text-sm hover:translate-x-1 transition-transform"
                   >
                     {item.label}
                   </Link>
@@ -394,9 +418,10 @@ export function MainLayout({ children }: MainLayoutProps) {
               </div>
             </div>
 
+            {/* Contact */}
             <div>
-              <h3 className="font-semibold text-lg mb-4">{t("footer.contactTitle")}</h3>
-              <div className="space-y-2 text-sm text-primary-foreground/70">
+              <h3 className="font-bold text-white text-sm uppercase tracking-wider mb-4">{t("footer.contactTitle")}</h3>
+              <div className="space-y-2.5 text-sm text-white/50">
                 <p>{t("footer.telegramLabel")}</p>
                 <p>{t("footer.botLabel")}</p>
                 <p>{t("footer.workingHoursLabel")}</p>
@@ -404,8 +429,13 @@ export function MainLayout({ children }: MainLayoutProps) {
             </div>
           </div>
 
-          <div className="border-t border-primary-foreground/10 mt-8 pt-8 text-center text-primary-foreground/50 text-sm">
-            {t("footer.copyright")}
+          {/* Bottom */}
+          <div className="border-t border-white/8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-white/35 text-xs">{t("footer.copyright")}</p>
+            <div className="flex items-center gap-1.5 text-xs text-white/30">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span>Barcha tizimlar ishlaydi</span>
+            </div>
           </div>
         </div>
       </footer>

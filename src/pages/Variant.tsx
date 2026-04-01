@@ -93,7 +93,7 @@ export default function Variant() {
 
     if (!result.ok) {
       if (result.error === 'no_premium_access') {
-        setStartError('Bu variantni boshlash uchun PRO obuna kerak.');
+        setStartError('Bu variantni boshlash uchun PREMIUM obuna kerak.');
       } else {
         setStartError('Serverga ulanishda xatolik. Qayta urinib ko\'ring.');
       }

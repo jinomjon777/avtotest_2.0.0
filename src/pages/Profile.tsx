@@ -184,7 +184,7 @@ useEffect(() => {
     <>
     <SEO
       title="Profilim"
-      description="Avtotestu.uz foydalanuvchi profili."
+      description="AVTOTEST PREMIUM foydalanuvchi profili."
       path="/profile"
       noIndex={true}
     />

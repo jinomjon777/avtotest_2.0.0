@@ -24,7 +24,7 @@ const AuthCallback = () => {
     <>
     <SEO
       title="Autentifikatsiya"
-      description="Avtotestu.uz autentifikatsiya jarayoni."
+      description="AVTOTEST PREMIUM autentifikatsiya jarayoni."
       path="/auth/callback"
       noIndex={true}
     />
